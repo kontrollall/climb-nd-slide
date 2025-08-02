@@ -1,4 +1,3 @@
--- Carrega biblioteca externa (com pcall)
 local success, Library = pcall(function()
 	return loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wizard"))()
 end)
@@ -12,25 +11,17 @@ local Window = Library:NewWindow("Script")
 local Tab = Window:NewSection("Credits: TGMANKASKE")
 
 
-
-
-
--- Lista de locais para teleportar
 local teleportLocations = {
-    ["First World"] = Vector3.new(4, 7021, 15045),
-    ["Second World"] = nil, -- vai buscar a posição do patch dinamicamente depois
-    ["Third World"] = Vector3.new(0, 10, 0), -- exemplo adicional
+    ["First World"] = Vector3.new(4, 7021, 15045)
 }
 
 local selectedLocationName = "First World"
 
--- Criar o dropdown para selecionar o local
-Tab:CreateDropdown("Select Teleport Location", { "First World", "Second World", "Third World" }, 1, function(selected)
+Tab:CreateDropdown("Select Teleport Location", { "First World" 1, function(selected)
     selectedLocationName = selected
     print("Local selecionado para teleport: " .. selected)
 end)
 
--- Botão de teleport aprimorado
 Tab:CreateButton("Teleport", function()
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
@@ -47,7 +38,6 @@ Tab:CreateButton("Teleport", function()
 
     local targetPosition = teleportLocations[selectedLocationName]
 
-    -- Se o local for "Patch", buscar posição no workspace
     if selectedLocationName == "Patch" then
         local patchPart = workspace:FindFirstChild("Maps")
             and workspace.Maps:FindFirstChild("Map_1")
@@ -96,10 +86,6 @@ Tab:CreateButton("Teleport", function()
 
     moveToPosition(targetPosition, speed)
 end)
-
-
-
-
 
 
 Tab:CreateButton("Give OP Pet", function()
@@ -186,7 +172,6 @@ Tab:CreateButton("Slide (auto detect world)", function()
 
     print("Mapa detectado para Slide:", closestMap.Name)
 
-    -- Executar o Slide 3 vezes no mapa detectado
     for i = 1, 3 do
         local args = {
             "Slide",
