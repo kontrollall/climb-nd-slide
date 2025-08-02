@@ -11,7 +11,97 @@ end
 local Window = Library:NewWindow("Script")
 local Tab = Window:NewSection("Credits: TGMANKASKE")
 
--- Botão para dar pet OP
+
+
+
+
+-- Lista de locais para teleportar
+local teleportLocations = {
+    ["First World"] = Vector3.new(4, 7021, 15045),
+    ["Second World"] = nil, -- vai buscar a posição do patch dinamicamente depois
+    ["Third World"] = Vector3.new(0, 10, 0), -- exemplo adicional
+}
+
+local selectedLocationName = "First World"
+
+-- Criar o dropdown para selecionar o local
+Tab:CreateDropdown("Select Teleport Location", { "First World", "Second World", "Third World" }, 1, function(selected)
+    selectedLocationName = selected
+    print("Local selecionado para teleport: " .. selected)
+end)
+
+-- Botão de teleport aprimorado
+Tab:CreateButton("Teleport", function()
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+
+    local player = Players.LocalPlayer
+    if not player then
+        warn("Jogador local não encontrado!")
+        return
+    end
+
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    local speed = 999
+
+    local targetPosition = teleportLocations[selectedLocationName]
+
+    -- Se o local for "Patch", buscar posição no workspace
+    if selectedLocationName == "Patch" then
+        local patchPart = workspace:FindFirstChild("Maps")
+            and workspace.Maps:FindFirstChild("Map_1")
+            and workspace.Maps.Map_1:FindFirstChild("MainPart")
+            and workspace.Maps.Map_1.MainPart:FindFirstChild("Ending_Model")
+            and workspace.Maps.Map_1.MainPart.Ending_Model:FindFirstChild("Trophy_Model")
+            and workspace.Maps.Map_1.MainPart.Ending_Model.Trophy_Model:FindFirstChild("Trophy")
+
+        if not patchPart then
+            warn("Patch (Trophy) não encontrado no workspace!")
+            return
+        end
+
+        targetPosition = patchPart.Position + Vector3.new(0, 3, 0)
+    end
+
+    if not targetPosition then
+        warn("Posição para teleportar inválida!")
+        return
+    end
+
+    local function moveToPosition(targetPos, speed)
+        local connection
+        connection = RunService.Heartbeat:Connect(function(deltaTime)
+            if not humanoidRootPart or not humanoidRootPart.Parent then
+                connection:Disconnect()
+                return
+            end
+
+            local currentPos = humanoidRootPart.Position
+            local direction = (targetPos - currentPos)
+            local distance = direction.Magnitude
+
+            if distance < 1 then
+                humanoidRootPart.CFrame = CFrame.new(targetPos)
+                connection:Disconnect()
+                print("Chegou ao destino: " .. selectedLocationName)
+                return
+            end
+
+            local moveDistance = math.min(speed * deltaTime, distance)
+            local moveVector = direction.Unit * moveDistance
+            humanoidRootPart.CFrame = humanoidRootPart.CFrame + moveVector
+        end)
+    end
+
+    moveToPosition(targetPosition, speed)
+end)
+
+
+
+
+
+
 Tab:CreateButton("Give OP Pet", function()
 	print("Tentando dar pet OP...")
 
@@ -38,75 +128,6 @@ Tab:CreateButton("Give OP Pet", function()
 		warn("Erro ao dar pet OP: "..tostring(err))
 	end
 end)
-
-
-
-Tab:CreateButton("Teleport", function()
-    local Players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
-
-    local player = Players.LocalPlayer
-    if not player then
-        warn("Jogador local não encontrado!")
-        return
-    end
-
-    local character = player.Character or player.CharacterAdded:Wait()
-    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-
-    local firstTargetPosition = Vector3.new(4, 7021, 15045) -- Posição fixa inicial
-    local speed = 200 -- velocidade studs/segundo (ajuste se quiser)
-
-    -- Pega o patch (posição final do segundo teleporte)
-    local patchPart = workspace:FindFirstChild("Maps")
-        and workspace.Maps:FindFirstChild("Map_1")
-        and workspace.Maps.Map_1:FindFirstChild("MainPart")
-        and workspace.Maps.Map_1.MainPart:FindFirstChild("Ending_Model")
-        and workspace.Maps.Map_1.MainPart.Ending_Model:FindFirstChild("Trophy_Model")
-        and workspace.Maps.Map_1.MainPart.Ending_Model.Trophy_Model:FindFirstChild("Trophy") -- patch
-
-    if not patchPart then
-        warn("Patch (Trophy) não encontrado no workspace!")
-        return
-    end
-
-    -- Função para mover suavemente até o destino, recebe callback para quando acabar
-    local function moveToPosition(targetPos, speed, onComplete)
-        local connection
-        connection = RunService.Heartbeat:Connect(function(deltaTime)
-            if not humanoidRootPart or not humanoidRootPart.Parent then
-                connection:Disconnect()
-                return
-            end
-
-            local currentPos = humanoidRootPart.Position
-            local direction = (targetPos - currentPos)
-            local distance = direction.Magnitude
-
-            if distance < 1 then
-                humanoidRootPart.CFrame = CFrame.new(targetPos)
-                connection:Disconnect()
-                print("Chegou ao destino!")
-
-                if onComplete then
-                    onComplete()
-                end
-                return
-            end
-
-            local moveDistance = math.min(speed * deltaTime, distance)
-            local moveVector = direction.Unit * moveDistance
-            humanoidRootPart.CFrame = humanoidRootPart.CFrame + moveVector
-        end)
-    end
-
-    -- Primeiro teleporta para a posição fixa
-    moveToPosition(firstTargetPosition, speed, function()
-        -- Depois que chegar, teleporta para o patch suavemente
-        moveToPosition(patchPart.Position + Vector3.new(0, 3, 0), speed)
-    end)
-end)
-
 
 
 
